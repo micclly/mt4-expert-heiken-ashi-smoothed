@@ -45,7 +45,7 @@ static bool OrderUtil::getTickets(int magicNumber, int& tickets[])
     int buf[100];
     int ticketCount = 0;
     for (int i = total - 1; i >= 0; i--) {
-        if (!OrderSelect(total - 1, SELECT_BY_POS)) {
+        if (!OrderSelect(i, SELECT_BY_POS)) {
             continue;
         }
         else if (OrderMagicNumber() != magicNumber) {

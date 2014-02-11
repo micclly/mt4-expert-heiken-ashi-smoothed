@@ -29,7 +29,7 @@ private:
     bool isDebug();
     void addHistory(double parabolic);
     bool isParabolicTrendChanged();
-    ParabolicTrend getParabolicTrend();
+    ParabolicTrend getParabolicTrend(int shift);
 };
 
 static const int ParabolicExpert::MAX_HISTORY_COUNT = 2;
@@ -59,7 +59,7 @@ void ParabolicExpert::onTick()
             PrintFormat("Parabolic trend changed, at %s", TimeToString(Time[1]));
         }
 
-        ParabolicTrend trend = getParabolicTrend();
+        ParabolicTrend trend = getParabolicTrend(0);
         if (isDebug()) {
             PrintFormat("Parabolic trend is: %s", EnumToString(trend));
         }
@@ -100,26 +100,27 @@ bool ParabolicExpert::isParabolicTrendChanged()
         return false;
     }
 
-    if ((m_parabolicHistory[1] < High[2]) && (m_parabolicHistory[0] > High[2])) {
-        return true;
-    }
-    else if ((m_parabolicHistory[1] > Low[2]) && (m_parabolicHistory[0] < Low[2])) {
-        return true;
+    ParabolicTrend t0 = getParabolicTrend(0);
+    ParabolicTrend t1 = getParabolicTrend(1);
+
+    if (t0 != UNKNOWN && t1 != UNKNOWN) {
+        return t0 != t1;
     }
 
     return false;
 }
 
-ParabolicTrend ParabolicExpert::getParabolicTrend()
+ParabolicTrend ParabolicExpert::getParabolicTrend(int shift)
 {
-    if (m_parabolicHistoryCount < 2) {
+    if (m_parabolicHistoryCount < shift) {
         return UNKNOWN;
     }
 
-    if (m_parabolicHistory[0] > High[2]) {
+    int shiftIndex = shift + 2;
+    if (m_parabolicHistory[shift] > High[shiftIndex]) {
         return DOWN;
     }
-    else if (m_parabolicHistory[0] < Low[2]) {
+    else if (m_parabolicHistory[shift] < Low[shiftIndex]) {
         return UP;
     }
 

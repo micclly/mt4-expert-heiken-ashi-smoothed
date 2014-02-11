@@ -8,8 +8,8 @@ input bool inputDebug = true;
 input double inputPrabolicSarStep = 0.02;
 input double inputParabolicSarMax = 0.2;
 input double inputLots = 0.1;
-input int inputTakeProfitPip = 75;
-input int inputStopLossPip = 25;
+input int inputTakeProfitPip = 750;
+input int inputStopLossPip = 250;
 
 
 ParabolicExpert g_expert(

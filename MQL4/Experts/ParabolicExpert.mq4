@@ -10,6 +10,7 @@ input double inputParabolicSarMax = 0.2;
 input double inputLots = 0.1;
 input int inputTakeProfitPip = 750;
 input int inputStopLossPip = 250;
+input int inputSlippage = 10;
 
 
 ParabolicExpert g_expert(
@@ -17,7 +18,8 @@ ParabolicExpert g_expert(
     inputParabolicSarMax,
     inputLots,
     inputTakeProfitPip,
-    inputStopLossPip);
+    inputStopLossPip,
+    inputSlippage);
 
 int OnInit()
 {

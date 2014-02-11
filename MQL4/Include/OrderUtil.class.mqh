@@ -5,35 +5,24 @@
 class OrderUtil
 {
 public:
-    static double getPoint();
-    static double getBid();
     static double getAsk();
     static double pipToPrice(int pip);
+    static int priceToPip(double price);
     static bool selectTicket(int ticket);
     static bool getTickets(int magicNumber, int& tickets[]);
-    static bool calcLimits(int ticket, int tpPip, int slPip, double& tp, double& sl);
+    static bool calcLimits(int orderType, int tpPip, int slPip, double& tp, double& sl);
+    static bool calcLimitsForModify(int ticket, int tpPip, int slPip, double& tp, double& sl);
 };
 
 
-
-static double OrderUtil::getPoint()
-{
-    return MarketInfo(Symbol(), MODE_POINT);
-}
-
-static double OrderUtil::getBid()
-{
-    return MarketInfo(Symbol(), MODE_BID);
-}
-
-static double OrderUtil::getAsk()
-{
-    return MarketInfo(Symbol(), MODE_ASK);
-}
-
 static double OrderUtil::pipToPrice(int pip)
 {
-    return pip * getPoint();
+    return pip * Point;
+}
+
+static int OrderUtil::priceToPip(double price)
+{
+    return (int)NormalizeDouble(price / Point, 0);
 }
 
 static bool OrderUtil::selectTicket(int ticket)
@@ -79,31 +68,27 @@ static bool OrderUtil::getTickets(int magicNumber, int& tickets[])
     return true;
 }
 
-static bool OrderUtil::calcLimits(int ticket, int tpPip, int slPip, double& tp, double& sl)
+static bool OrderUtil::calcLimits(int orderType, int tpPip, int slPip, double& tp, double& sl)
 {
-    if (!selectTicket(ticket)) {
-        return false;
-    }
-
-    if (OrderType() == OP_BUY) {
-        double ask = getAsk();
+    if (orderType == OP_BUY) {
+        double ask = Ask;
         if (tpPip > 0) {
-            tp = ask + pipToPrice(tpPip);
+            tp = NormalizeDouble(ask + pipToPrice(tpPip), Digits);
         }
 
         if (slPip > 0) {
-            sl = ask - pipToPrice(slPip);
+            sl = NormalizeDouble(ask - pipToPrice(slPip), Digits);
         }
 
     }
-    else if (OrderType() == OP_SELL) {
-        double bid = getBid();
+    else if (orderType == OP_SELL) {
+        double bid = Bid;
         if (tpPip > 0) {
-            tp = bid - pipToPrice(tpPip);
+            tp = NormalizeDouble(bid - pipToPrice(tpPip), Digits);
         }
 
         if (slPip > 0) {
-            sl = bid + pipToPrice(slPip);
+            sl = NormalizeDouble(bid + pipToPrice(slPip), Digits);
         }
     }
     else {
@@ -113,3 +98,39 @@ static bool OrderUtil::calcLimits(int ticket, int tpPip, int slPip, double& tp, 
     
     return true;
 }
+
+static bool OrderUtil::calcLimitsForModify(int ticket, int tpPip, int slPip, double& tp, double& sl)
+{
+    if (!selectTicket(ticket)) {
+        return false;
+    }
+
+    if (OrderType() == OP_BUY) {
+        double ask = Ask;
+        if (tpPip > 0) {
+            tp = NormalizeDouble(ask + pipToPrice(tpPip), Digits);
+        }
+
+        if (slPip > 0) {
+            sl = NormalizeDouble(ask - pipToPrice(slPip), Digits);
+        }
+
+    }
+    else if (OrderType() == OP_SELL) {
+        double bid = Bid;
+        if (tpPip > 0) {
+            tp = NormalizeDouble(bid - pipToPrice(tpPip), Digits);
+        }
+
+        if (slPip > 0) {
+            sl = NormalizeDouble(bid + pipToPrice(slPip), Digits);
+        }
+    }
+    else {
+        return false;
+    }
+
+    
+    return true;
+}
+

@@ -13,16 +13,21 @@ enum ParabolicTrend
 class ParabolicExpert
 {
 public:
-    ParabolicExpert(double sarStep, double sarMax);
+    ParabolicExpert(double sarStep, double sarMax, double lots, int tpPip, int slPip);
 
     void enableDebug();
     void onTick();
     
 private:
+    static const int MAGIC_NUMBER;
     static const int MAX_HISTORY_COUNT;
+
     bool m_debug;
     const double m_sarStep;
     const double m_sarMax;
+    const double m_lots;
+    const int m_tpPip;
+    const int m_slPip;
     double m_parabolicHistory[];
     int m_parabolicHistoryCount;
 
@@ -30,13 +35,19 @@ private:
     void addHistory(double parabolic);
     bool isParabolicTrendChanged();
     ParabolicTrend getParabolicTrend(int shift);
+    bool buy();
+    bool sell();
+    bool close();
 };
 
+
+static const int ParabolicExpert::MAGIC_NUMBER = 868001;
 static const int ParabolicExpert::MAX_HISTORY_COUNT = 2;
 
 
-ParabolicExpert::ParabolicExpert(double sarStep, double sarMax)
-: m_debug(false), m_sarStep(sarStep), m_sarMax(sarMax), m_parabolicHistoryCount(0)
+ParabolicExpert::ParabolicExpert(double sarStep, double sarMax, double lots, int tpPip, int slPip)
+: m_debug(false), m_sarStep(sarStep), m_sarMax(sarMax), m_parabolicHistoryCount(0),
+  m_lots(lots), m_tpPip(tpPip), m_slPip(slPip)
 {
     ArraySetAsSeries(m_parabolicHistory, true);
     ArrayResize(m_parabolicHistory, MAX_HISTORY_COUNT);
@@ -125,4 +136,19 @@ ParabolicTrend ParabolicExpert::getParabolicTrend(int shift)
     }
 
     return UNKNOWN;
+}
+
+bool ParabolicExpert::buy()
+{
+    return false;
+}
+
+bool ParabolicExpert::sell()
+{
+    return false;
+}
+
+bool ParabolicExpert::close()
+{
+    return false;
 }

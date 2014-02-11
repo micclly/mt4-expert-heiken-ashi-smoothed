@@ -3,6 +3,13 @@
 #property version   "1.00"
 #property strict
 
+enum ParabolicTrend
+{
+    UP,
+    DOWN,
+    UNKNOWN,
+};
+
 class ParabolicExpert
 {
 public:
@@ -22,6 +29,7 @@ private:
     bool isDebug();
     void addHistory(double parabolic);
     bool isParabolicTrendChanged();
+    ParabolicTrend getParabolicTrend();
 };
 
 static const int ParabolicExpert::MAX_HISTORY_COUNT = 2;
@@ -50,6 +58,20 @@ void ParabolicExpert::onTick()
             PrintFormat("parabolic[0]=%s, parabolic[1]=%s", DoubleToString(m_parabolicHistory[0], 4), DoubleToString(m_parabolicHistory[1], 4));
             PrintFormat("Parabolic trend changed, at %s", TimeToString(Time[1]));
         }
+
+        ParabolicTrend trend = getParabolicTrend();
+        if (isDebug()) {
+            PrintFormat("Parabolic trend is: %s", EnumToString(trend));
+        }
+
+        switch (trend) {
+        case UP:
+            break;
+        case DOWN:
+            break;
+        default:
+            break;
+        }
     }
 }
 
@@ -74,7 +96,7 @@ void ParabolicExpert::addHistory(double parabolic)
 
 bool ParabolicExpert::isParabolicTrendChanged()
 {
-    if (m_parabolicHistoryCount < MAX_HISTORY_COUNT) {
+    if (m_parabolicHistoryCount < 2) {
         return false;
     }
 
@@ -86,4 +108,20 @@ bool ParabolicExpert::isParabolicTrendChanged()
     }
 
     return false;
+}
+
+ParabolicTrend ParabolicExpert::getParabolicTrend()
+{
+    if (m_parabolicHistoryCount < 2) {
+        return UNKNOWN;
+    }
+
+    if (m_parabolicHistory[0] > High[2]) {
+        return DOWN;
+    }
+    else if (m_parabolicHistory[0] < Low[2]) {
+        return UP;
+    }
+
+    return UNKNOWN;
 }

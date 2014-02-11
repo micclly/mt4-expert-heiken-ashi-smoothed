@@ -29,6 +29,8 @@ private:
     const double m_lots;
     const int m_tpPip;
     const int m_slPip;
+
+    int g_prevBars;
     double m_parabolicHistory[];
     int m_parabolicHistoryCount;
 
@@ -48,7 +50,7 @@ static const int ParabolicExpert::MAX_HISTORY_COUNT = 2;
 
 ParabolicExpert::ParabolicExpert(double sarStep, double sarMax, double lots, int tpPip, int slPip)
 : m_debug(false), m_sarStep(sarStep), m_sarMax(sarMax), m_parabolicHistoryCount(0),
-  m_lots(lots), m_tpPip(tpPip), m_slPip(slPip)
+  m_lots(lots), m_tpPip(tpPip), m_slPip(slPip), g_prevBars(0)
 {
     ArraySetAsSeries(m_parabolicHistory, true);
     ArrayResize(m_parabolicHistory, MAX_HISTORY_COUNT);
@@ -62,8 +64,25 @@ void ParabolicExpert::enableDebug()
 
 void ParabolicExpert::onTick()
 {
+    if (g_prevBars == Bars) {
+        return;
+    }
+
+    g_prevBars = Bars;
+
     double p = iCustom(NULL, 0, "Parabolic", 0.02, 0.2, 0, 0);
     addHistory(p);
+
+    int tickets[];
+    if (!OrderUtil::getTickets(MAGIC_NUMBER, tickets)) {
+        Alert("Cannot get tickets");
+        ExpertRemove();
+        return;
+    }
+    
+    for (int i = 0; i < ArraySize(tickets); i++) {
+        //
+    }
 
     if (isParabolicTrendChanged()) {
         if (isDebug()) {
@@ -75,7 +94,7 @@ void ParabolicExpert::onTick()
         if (isDebug()) {
             PrintFormat("Parabolic trend is: %s", EnumToString(trend));
         }
-
+        
         switch (trend) {
         case UP:
             break;

@@ -14,7 +14,7 @@ enum ParabolicTrend
 class ParabolicExpert
 {
 public:
-    ParabolicExpert(double sarStep, double sarMax, double lots, int tpPip, int slPip, int slipPip);
+    ParabolicExpert(double sarStep, double sarMax, ENUM_MA_METHOD maMethod, int maPeriod, double lots, int tpPip, int slPip, int slipPip);
 
     void enableDebug();
     void onTick();
@@ -26,6 +26,8 @@ private:
     bool m_debug;
     const double m_sarStep;
     const double m_sarMax;
+    const ENUM_MA_METHOD m_maMethod;
+    const int m_maPeriod;
     const double m_lots;
     const int m_tpPip;
     const int m_slPip;
@@ -49,8 +51,8 @@ static const int ParabolicExpert::MAGIC_NUMBER = 868001;
 static const int ParabolicExpert::MAX_HISTORY_COUNT = 2;
 
 
-ParabolicExpert::ParabolicExpert(double sarStep, double sarMax, double lots, int tpPip, int slPip, int slipPip)
-: m_debug(false), m_sarStep(sarStep), m_sarMax(sarMax), m_parabolicHistoryCount(0),
+ParabolicExpert::ParabolicExpert(double sarStep, double sarMax, ENUM_MA_METHOD maMethod, int maPeriod, double lots, int tpPip, int slPip, int slipPip)
+: m_debug(false), m_sarStep(sarStep), m_sarMax(sarMax), m_maMethod(maMethod), m_maPeriod(maPeriod), m_parabolicHistoryCount(0),
   m_lots(lots), m_tpPip(tpPip), m_slPip(slPip), m_slipPip(slipPip), g_prevBars(0)
 {
     ArraySetAsSeries(m_parabolicHistory, true);
@@ -146,10 +148,11 @@ ParabolicTrend ParabolicExpert::getParabolicTrend(int shift)
     }
 
     int shiftIndex = shift + 2;
-    if (m_parabolicHistory[shift] > High[shiftIndex]) {
+    double ma = iMA(Symbol(), 0, m_maPeriod, 0, m_maMethod, PRICE_CLOSE, shift);
+    if (m_parabolicHistory[shift] >= ma) {
         return DOWN;
     }
-    else if (m_parabolicHistory[shift] < Low[shiftIndex]) {
+    else if (m_parabolicHistory[shift] <= ma) {
         return UP;
     }
 

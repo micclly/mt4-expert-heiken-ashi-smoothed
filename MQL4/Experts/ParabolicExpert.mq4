@@ -3,19 +3,28 @@
 #property version   "1.00"
 #property strict
 
+input bool inputDebug = true;
+input double inputPrabolicSarStep = 0.02;
+input double inputParabolicSarMax = 0.2;
+
+
 class ParabolicExpert
 {
 public:
     ParabolicExpert(double sarStep, double sarMax);
+
+    void enableDebug();
     void onTick();
     
 private:
     static const int MAX_HISTORY_COUNT;
+    bool m_debug;
     const double m_sarStep;
     const double m_sarMax;
     double m_parabolicHistory[];
     int m_parabolicHistoryCount;
 
+    bool isDebug();
     void addHistory(double parabolic);
     bool isParabolicTrendChanged();
 };
@@ -24,22 +33,34 @@ static const int ParabolicExpert::MAX_HISTORY_COUNT = 2;
 
 
 ParabolicExpert::ParabolicExpert(double sarStep, double sarMax)
-: m_sarStep(sarStep), m_sarMax(sarMax), m_parabolicHistoryCount(0)
+: m_debug(false), m_sarStep(sarStep), m_sarMax(sarMax), m_parabolicHistoryCount(0)
 {
     ArraySetAsSeries(m_parabolicHistory, true);
     ArrayResize(m_parabolicHistory, MAX_HISTORY_COUNT);
 }
 
-ParabolicExpert::onTick()
+void ParabolicExpert::enableDebug()
+{
+    Print("Debug mode enabled");
+    m_debug = true;
+}
+
+void ParabolicExpert::onTick()
 {
     double p = iCustom(NULL, 0, "Parabolic", 0.02, 0.2, 0, 0);
-    PrintFormat("Adding parabolic %.3f to history, at %s, high %.3f low %.3f", p, TimeToString(Time[1]), High[1], Low[1]);
     addHistory(p);
 
     if (isParabolicTrendChanged()) {
-        PrintFormat("parabolic[0]=%s, parabolic[1]=%s", DoubleToString(m_parabolicHistory[0], 4), DoubleToString(m_parabolicHistory[1], 4));
-        PrintFormat("Parabolic trend changed, at %s", TimeToString(Time[1]));
+        if (isDebug()) {
+            PrintFormat("parabolic[0]=%s, parabolic[1]=%s", DoubleToString(m_parabolicHistory[0], 4), DoubleToString(m_parabolicHistory[1], 4));
+            PrintFormat("Parabolic trend changed, at %s", TimeToString(Time[1]));
+        }
     }
+}
+
+bool ParabolicExpert::isDebug()
+{
+    return m_debug;
 }
 
 void ParabolicExpert::addHistory(double parabolic)
@@ -72,13 +93,14 @@ bool ParabolicExpert::isParabolicTrendChanged()
     return false;
 }
 
-input double parabolicSarStep = 0.02;
-input double parabolicSarMax = 0.2;
-
-ParabolicExpert expert(parabolicSarStep, parabolicSarMax);
+ParabolicExpert g_expert(inputPrabolicSarStep, inputParabolicSarMax);
 
 int OnInit()
 {
+    if (inputDebug) {
+        g_expert.enableDebug();
+    }
+
     return INIT_SUCCEEDED;
 }
 
@@ -88,5 +110,5 @@ void OnDeinit(const int reason)
 
 void OnTick()
 {
-    expert.onTick();
+    g_expert.onTick();
 }

@@ -2,7 +2,7 @@
 #property link      "https://github.com/micclly"
 #property strict
 
-#include <ParabolicExpert.class.mqh>
+#include <HeikenAshiSmoothedExpert.class.mqh>
 
 input int inputDebugLevel = 1;
 input double inputPrabolicSarStep = 0.02;

@@ -9,8 +9,6 @@
 #include <HeikenAshiSmoothedExpert.class.mqh>
 
 input int inputDebugLevel = 1;
-input double inputPrabolicSarStep = 0.02;
-input double inputParabolicSarMax = 0.2;
 input ENUM_MA_METHOD inputMaMethod = MODE_SMMA;
 input int inputMaPeriod = 200;
 input ENUM_MA_METHOD inputMaMethod2 = MODE_SMMA;

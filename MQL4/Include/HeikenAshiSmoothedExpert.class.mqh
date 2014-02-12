@@ -12,6 +12,12 @@ enum HeikenTrend
     HT_UNKNOWN,
 };
 
+struct OpenCloseValue
+{
+    double open;
+    double close;
+};
+
 class ParabolicExpert
 {
 public:
@@ -35,7 +41,7 @@ private:
     const int m_slipPip;
 
     int m_prevBars;
-    double m_heikenHistory[][2];
+    OpenCloseValue m_heikenHistory[];
     int m_heikenHistoryCount;
 
     bool isDebug(int level);
@@ -86,11 +92,11 @@ void ParabolicExpert::onTick()
 
     if (barsChanged && isHeikenTrendChanged()) {
         if (isDebug(2)) {
-            PrintFormat("m_heikenHistory[0][0]=%s, m_heikenHistory[0][1]=%s, m_heikenHistory[1][0]=%s, m_heikenHistory[1][1]",
-                DoubleToString(m_heikenHistory[0][0], Digits),
-                DoubleToString(m_heikenHistory[0][1], Digits),
-                DoubleToString(m_heikenHistory[1][0], Digits),
-                DoubleToString(m_heikenHistory[1][1], Digits));
+            PrintFormat("m_heikenHistory[0].open=%s, m_heikenHistory[0].close=%s, m_heikenHistory[1].open=%s, m_heikenHistory[1].close",
+                DoubleToString(m_heikenHistory[0].open, Digits),
+                DoubleToString(m_heikenHistory[0].close, Digits),
+                DoubleToString(m_heikenHistory[1].open, Digits),
+                DoubleToString(m_heikenHistory[1].close, Digits));
         }
 
         HeikenTrend trend = getHeikenTrend(0);
@@ -119,8 +125,7 @@ void ParabolicExpert::updateHistory()
 {
     if (m_heikenHistoryCount > 0 ) {
         for (int i = m_heikenHistoryCount - 1; i > 0; i--) {
-            m_heikenHistory[i][0] = m_heikenHistory[i -1][0];
-            m_heikenHistory[i][1] = m_heikenHistory[i -1][1];
+            m_heikenHistory[i] = m_heikenHistory[i -1];
         }
     }
 
@@ -134,8 +139,8 @@ void ParabolicExpert::updateHistory()
     }
 
     
-    m_heikenHistory[0][0] = NormalizeDouble(haOpen, Digits);
-    m_heikenHistory[0][1] = NormalizeDouble(haClose, Digits);
+    m_heikenHistory[0].open = NormalizeDouble(haOpen, Digits);
+    m_heikenHistory[0].close = NormalizeDouble(haClose, Digits);
 
     if (m_heikenHistoryCount < MAX_HISTORY_COUNT) {
         m_heikenHistoryCount += 1;
@@ -172,10 +177,10 @@ HeikenTrend ParabolicExpert::getHeikenTrend(int shift)
         return HT_UNKNOWN;
     }
 
-    if (m_heikenHistory[shift][0] < m_heikenHistory[shift][1]) {
+    if (m_heikenHistory[shift].open < m_heikenHistory[shift].close) {
         return HT_UP;
     }
-    else if (m_heikenHistory[shift][0] == m_heikenHistory[shift][1]) {
+    else if (m_heikenHistory[shift].open == m_heikenHistory[shift].close) {
         return HT_FLAT;
     }
     else {

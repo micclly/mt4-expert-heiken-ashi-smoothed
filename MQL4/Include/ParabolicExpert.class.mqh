@@ -4,43 +4,44 @@
 
 #include <OrderUtil.class.mqh>
 
-enum ParabolicTrend
+enum HeikenTrend
 {
-    UP,
-    DOWN,
-    UNKNOWN,
+    HT_UP,
+    HT_FLAT,
+    HT_DOWN,
+    HT_UNKNOWN,
 };
 
 class ParabolicExpert
 {
 public:
-    ParabolicExpert(double sarStep, double sarMax, ENUM_MA_METHOD maMethod, int maPeriod, double lots, int tpPip, int slPip, int slipPip);
+    ParabolicExpert(ENUM_MA_METHOD maMethod, int maPeriod, ENUM_MA_METHOD maMethod2, int maPeriod2, double lots, int tpPip, int slPip, int slipPip);
 
-    void enableDebug();
+    void setDebugLevel(int level);
     void onTick();
     
 private:
     static const int MAGIC_NUMBER;
     static const int MAX_HISTORY_COUNT;
 
-    bool m_debug;
-    const double m_sarStep;
-    const double m_sarMax;
+    int m_debugLevel;
     const ENUM_MA_METHOD m_maMethod;
     const int m_maPeriod;
+    const ENUM_MA_METHOD m_maMethod2;
+    const int m_maPeriod2;
     const double m_lots;
     const int m_tpPip;
     const int m_slPip;
     const int m_slipPip;
 
-    int g_prevBars;
-    double m_parabolicHistory[];
-    int m_parabolicHistoryCount;
+    int m_prevBars;
+    double m_heikenHistory[][2];
+    int m_heikenHistoryCount;
 
-    bool isDebug();
-    void addHistory(double parabolic);
-    bool isParabolicTrendChanged();
-    ParabolicTrend getParabolicTrend(int shift);
+    bool isDebug(int level);
+    void updateHistory();
+    bool isHeikenTrendChanged();
+    HeikenTrend getHeikenTrend(int shift);
     bool buy();
     bool sell();
     bool processTickets();
@@ -51,53 +52,56 @@ static const int ParabolicExpert::MAGIC_NUMBER = 868001;
 static const int ParabolicExpert::MAX_HISTORY_COUNT = 2;
 
 
-ParabolicExpert::ParabolicExpert(double sarStep, double sarMax, ENUM_MA_METHOD maMethod, int maPeriod, double lots, int tpPip, int slPip, int slipPip)
-: m_debug(false), m_sarStep(sarStep), m_sarMax(sarMax), m_maMethod(maMethod), m_maPeriod(maPeriod), m_parabolicHistoryCount(0),
-  m_lots(lots), m_tpPip(tpPip), m_slPip(slPip), m_slipPip(slipPip), g_prevBars(0)
+ParabolicExpert::ParabolicExpert(ENUM_MA_METHOD maMethod, int maPeriod, ENUM_MA_METHOD maMethod2, int maPeriod2, double lots, int tpPip, int slPip, int slipPip)
+: m_debugLevel(0), m_maMethod(maMethod), m_maPeriod(maPeriod), m_heikenHistoryCount(0),
+  m_maMethod2(maMethod2), m_maPeriod2(maPeriod2),
+  m_lots(lots), m_tpPip(tpPip), m_slPip(slPip), m_slipPip(slipPip), m_prevBars(0)
 {
-    ArraySetAsSeries(m_parabolicHistory, true);
-    ArrayResize(m_parabolicHistory, MAX_HISTORY_COUNT);
+    ArraySetAsSeries(m_heikenHistory, true);
+    ArrayResize(m_heikenHistory, MAX_HISTORY_COUNT);
 }
 
-void ParabolicExpert::enableDebug()
+void ParabolicExpert::setDebugLevel(int level)
 {
-    Print("Debug mode enabled");
-    m_debug = true;
+    PrintFormat("Debug mode enabled: level=%d", level);
+    m_debugLevel = level;
 }
 
 void ParabolicExpert::onTick()
 {
     bool barsChanged = false;
-    if (g_prevBars != Bars) {
+    if (m_prevBars != Bars) {
         barsChanged = true;
     }
 
-    g_prevBars = Bars;
+    m_prevBars = Bars;
 
     if (barsChanged) {
-        double p = iCustom(NULL, 0, "Parabolic", 0.02, 0.2, 0, 0);
-        addHistory(p);
+        updateHistory();
     }
 
     if (!processTickets()) {
         return;
     }
 
-    if (barsChanged && isParabolicTrendChanged()) {
-        if (isDebug()) {
-            PrintFormat("parabolic[0]=%s, parabolic[1]=%s", DoubleToString(m_parabolicHistory[0], 4), DoubleToString(m_parabolicHistory[1], 4));
-            PrintFormat("Parabolic trend changed, at %s", TimeToString(Time[1]));
+    if (barsChanged && isHeikenTrendChanged()) {
+        if (isDebug(2)) {
+            PrintFormat("m_heikenHistory[0][0]=%s, m_heikenHistory[0][1]=%s, m_heikenHistory[1][0]=%s, m_heikenHistory[1][1]",
+                DoubleToString(m_heikenHistory[0][0], Digits),
+                DoubleToString(m_heikenHistory[0][1], Digits),
+                DoubleToString(m_heikenHistory[1][0], Digits),
+                DoubleToString(m_heikenHistory[1][1], Digits));
         }
 
-        ParabolicTrend trend = getParabolicTrend(0);
-        if (isDebug()) {
-            PrintFormat("Parabolic trend is: %s", EnumToString(trend));
+        HeikenTrend trend = getHeikenTrend(0);
+        if (isDebug(1)) {
+            PrintFormat("Heiken trend is changed to: %s", EnumToString(trend));
         }
         
-        if (trend == UP) {
+        if (trend == HT_UP) {
             buy();
         }
-        else if (trend == DOWN) {
+        else if (trend == HT_DOWN) {
             sell();
         }
         else {
@@ -106,57 +110,72 @@ void ParabolicExpert::onTick()
     }
 }
 
-bool ParabolicExpert::isDebug()
+bool ParabolicExpert::isDebug(int level)
 {
-    return m_debug;
+    return m_debugLevel >= level;
 }
 
-void ParabolicExpert::addHistory(double parabolic)
+void ParabolicExpert::updateHistory()
 {
-    if (m_parabolicHistoryCount > 0 ) {
-        for (int i = m_parabolicHistoryCount - 1; i > 0; i--) {
-            m_parabolicHistory[i] = m_parabolicHistory[i-1];
+    if (m_heikenHistoryCount > 0 ) {
+        for (int i = m_heikenHistoryCount - 1; i > 0; i--) {
+            m_heikenHistory[i][0] = m_heikenHistory[i -1][0];
+            m_heikenHistory[i][1] = m_heikenHistory[i -1][1];
         }
     }
 
-    m_parabolicHistory[0] = parabolic;
-    if (m_parabolicHistoryCount < MAX_HISTORY_COUNT) {
-        m_parabolicHistoryCount += 1;
+    double haOpen = iCustom(NULL, 0, "Heiken_Ashi_Smoothed", m_maMethod, m_maPeriod, m_maMethod2, m_maPeriod2, 2, 1);
+    double haClose = iCustom(NULL, 0, "Heiken_Ashi_Smoothed", m_maMethod, m_maPeriod, m_maMethod2, m_maPeriod2, 3, 1);
+
+    if (isDebug(2)) {
+        PrintFormat("haOpen=%s, haClose=%s, at %s",
+            DoubleToString(haOpen, Digits), DoubleToString(haClose, Digits),
+            TimeToString(Time[1]));
+    }
+
+    
+    m_heikenHistory[0][0] = NormalizeDouble(haOpen, Digits);
+    m_heikenHistory[0][1] = NormalizeDouble(haClose, Digits);
+
+    if (m_heikenHistoryCount < MAX_HISTORY_COUNT) {
+        m_heikenHistoryCount += 1;
     }
 }
 
-bool ParabolicExpert::isParabolicTrendChanged()
+bool ParabolicExpert::isHeikenTrendChanged()
 {
-    if (m_parabolicHistoryCount < 2) {
+    if (m_heikenHistoryCount < 2) {
+        return false;
+    }
+    else if (m_prevBars <= 10) {
         return false;
     }
 
-    ParabolicTrend t0 = getParabolicTrend(0);
-    ParabolicTrend t1 = getParabolicTrend(1);
+    HeikenTrend t0 = getHeikenTrend(0);
+    HeikenTrend t1 = getHeikenTrend(1);
 
-    if (t0 != UNKNOWN && t1 != UNKNOWN) {
+    if (t0 != HT_UNKNOWN && t1 != HT_UNKNOWN) {
         return t0 != t1;
     }
 
     return false;
 }
 
-ParabolicTrend ParabolicExpert::getParabolicTrend(int shift)
+HeikenTrend ParabolicExpert::getHeikenTrend(int shift)
 {
-    if (m_parabolicHistoryCount < shift) {
-        return UNKNOWN;
+    if (m_heikenHistoryCount < shift) {
+        return HT_UNKNOWN;
     }
 
-    int shiftIndex = shift + 2;
-    double ma = iMA(Symbol(), 0, m_maPeriod, 0, m_maMethod, PRICE_CLOSE, shift);
-    if (m_parabolicHistory[shift] >= ma) {
-        return DOWN;
+    if (m_heikenHistory[shift][0] < m_heikenHistory[shift][1]) {
+        return HT_UP;
     }
-    else if (m_parabolicHistory[shift] <= ma) {
-        return UP;
+    else if (m_heikenHistory[shift][0] == m_heikenHistory[shift][1]) {
+        return HT_FLAT;
     }
-
-    return UNKNOWN;
+    else {
+        return HT_DOWN;
+    }
 }
 
 bool ParabolicExpert::buy()
@@ -198,7 +217,7 @@ bool ParabolicExpert::processTickets()
         return true;
     }
     
-    ParabolicTrend trend = getParabolicTrend(0);
+    HeikenTrend trend = getHeikenTrend(0);
     for (int i = 0; i < ArraySize(tickets); i++) {
         if (!OrderUtil::selectTicket(tickets[i])) {
             Alert("Cannot select ticket #" + IntegerToString(tickets[i]));
@@ -207,20 +226,16 @@ bool ParabolicExpert::processTickets()
         }
 
         if (OrderType() == OP_BUY) {
-            if (trend == DOWN) {
-                if (Bid - OrderOpenPrice()  <= 0) {
-                    if (!OrderClose(tickets[i], OrderLots(), Bid, m_slipPip, clrGreen)) {
-                        Alert("Cannot close ticket #" + IntegerToString(tickets[i]));
-                    }
+            if (trend == HT_DOWN) {
+                if (!OrderClose(tickets[i], OrderLots(), Bid, m_slipPip, clrGreen)) {
+                    Alert("Cannot close ticket #" + IntegerToString(tickets[i]));
                 }
             }
         }
         else if (OrderType() == OP_SELL) {
-            if (trend == UP) {
-                if (OrderOpenPrice() - Ask <= 0) {
-                    if (!OrderClose(tickets[i], OrderLots(), Ask, m_slipPip, clrYellow)) {
-                        Alert("Cannot close ticket #" + IntegerToString(tickets[i]));
-                    }
+            if (trend == HT_UP) {
+                if (!OrderClose(tickets[i], OrderLots(), Ask, m_slipPip, clrYellow)) {
+                    Alert("Cannot close ticket #" + IntegerToString(tickets[i]));
                 }
             }
         }

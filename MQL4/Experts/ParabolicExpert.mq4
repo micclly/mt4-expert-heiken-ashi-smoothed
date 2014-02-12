@@ -4,22 +4,24 @@
 
 #include <ParabolicExpert.class.mqh>
 
-input bool inputDebug = true;
+input int inputDebugLevel = 1;
 input double inputPrabolicSarStep = 0.02;
 input double inputParabolicSarMax = 0.2;
 input ENUM_MA_METHOD inputMaMethod = MODE_SMMA;
 input int inputMaPeriod = 200;
+input ENUM_MA_METHOD inputMaMethod2 = MODE_SMMA;
+input int inputMaPeriod2 = 200;
 input double inputLots = 0.1;
 input int inputTakeProfitPip = 750;
 input int inputStopLossPip = 250;
-input int inputSlippage = 10;
+input int inputSlippage = 5;
 
 
 ParabolicExpert g_expert(
-    inputPrabolicSarStep,
-    inputParabolicSarMax,
     inputMaMethod,
     inputMaPeriod,
+    inputMaMethod2,
+    inputMaPeriod2,
     inputLots,
     inputTakeProfitPip,
     inputStopLossPip,
@@ -27,9 +29,9 @@ ParabolicExpert g_expert(
 
 int OnInit()
 {
-    if (inputDebug) {
-        g_expert.enableDebug();
-    }
+
+    g_expert.setDebugLevel(inputDebugLevel);
+
 
     return INIT_SUCCEEDED;
 }

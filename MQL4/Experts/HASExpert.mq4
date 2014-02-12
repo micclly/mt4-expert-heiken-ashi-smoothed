@@ -33,7 +33,6 @@ HeikenAshiSmoothedExpert g_expert(
 
 int OnInit()
 {
-
     g_expert.setDebugLevel(inputDebugLevel);
 
 

@@ -14,4 +14,4 @@ License
 
 This expert is licensed under GNU General Public License Version 3.
 
-Seel the LICENSE file for detail.
+See a LICENSE file for detail.

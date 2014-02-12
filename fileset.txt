@@ -1,3 +1,4 @@
 /Include/OrderUtil.class.mqh
 /Include/HeikenAshiSmoothedExpert.class.mqh
+/Indicators/Heiken_Ashi_Smoothed.mq4
 /Experts/HASExpert.mq4

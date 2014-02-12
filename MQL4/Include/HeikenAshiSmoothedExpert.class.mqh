@@ -105,7 +105,7 @@ void ParabolicExpert::onTick()
             sell();
         }
         else {
-            Alert("Unknown trend type: " + EnumToString(trend));
+            Alert("Unexpected trend type: " + EnumToString(trend));
         }
     }
 }

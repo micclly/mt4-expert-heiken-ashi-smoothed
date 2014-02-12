@@ -1,3 +1,7 @@
+/*
+ * This is licensed under GNU General Public License Version 3.
+ * See a LICENSE file distributed with this software.
+ */
 #property copyright "Copyright 2014, micclly."
 #property link      "https://github.com/micclly"
 #property strict

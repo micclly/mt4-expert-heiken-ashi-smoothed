@@ -49,7 +49,7 @@ private:
 
 
 static const int ParabolicExpert::MAGIC_NUMBER = 868001;
-static const int ParabolicExpert::MAX_HISTORY_COUNT = 2;
+static const int ParabolicExpert::MAX_HISTORY_COUNT = 200;
 
 
 ParabolicExpert::ParabolicExpert(ENUM_MA_METHOD maMethod, int maPeriod, ENUM_MA_METHOD maMethod2, int maPeriod2, double lots, int tpPip, int slPip, int slipPip)
@@ -151,11 +151,16 @@ bool ParabolicExpert::isHeikenTrendChanged()
         return false;
     }
 
-    HeikenTrend t0 = getHeikenTrend(0);
-    HeikenTrend t1 = getHeikenTrend(1);
+    HeikenTrend latest = getHeikenTrend(0);
+    if (latest == HT_FLAT) {
+        return false;
+    }
 
-    if (t0 != HT_UNKNOWN && t1 != HT_UNKNOWN) {
-        return t0 != t1;
+    for (int i = 1; i < m_heikenHistoryCount; i++) {
+        HeikenTrend t = getHeikenTrend(i);
+        if (t != HT_FLAT) {
+            return t != latest;
+        }
     }
 
     return false;

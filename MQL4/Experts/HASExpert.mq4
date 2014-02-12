@@ -21,7 +21,7 @@ input int inputStopLossPip = 250;
 input int inputSlippage = 5;
 
 
-ParabolicExpert g_expert(
+HeikenAshiSmoothedExpert g_expert(
     inputMaMethod,
     inputMaPeriod,
     inputMaMethod2,

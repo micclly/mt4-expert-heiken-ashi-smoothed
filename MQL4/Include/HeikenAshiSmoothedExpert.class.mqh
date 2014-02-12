@@ -22,10 +22,10 @@ struct OpenCloseValue
     double close;
 };
 
-class ParabolicExpert
+class HeikenAshiSmoothedExpert
 {
 public:
-    ParabolicExpert(ENUM_MA_METHOD maMethod, int maPeriod, ENUM_MA_METHOD maMethod2, int maPeriod2, double lots, int tpPip, int slPip, int slipPip);
+    HeikenAshiSmoothedExpert(ENUM_MA_METHOD maMethod, int maPeriod, ENUM_MA_METHOD maMethod2, int maPeriod2, double lots, int tpPip, int slPip, int slipPip);
 
     void setDebugLevel(int level);
     void onTick();
@@ -58,11 +58,11 @@ private:
 };
 
 
-static const int ParabolicExpert::MAGIC_NUMBER = 868001;
-static const int ParabolicExpert::MAX_HISTORY_COUNT = 200;
+static const int HeikenAshiSmoothedExpert::MAGIC_NUMBER = 868001;
+static const int HeikenAshiSmoothedExpert::MAX_HISTORY_COUNT = 200;
 
 
-ParabolicExpert::ParabolicExpert(ENUM_MA_METHOD maMethod, int maPeriod, ENUM_MA_METHOD maMethod2, int maPeriod2, double lots, int tpPip, int slPip, int slipPip)
+HeikenAshiSmoothedExpert::HeikenAshiSmoothedExpert(ENUM_MA_METHOD maMethod, int maPeriod, ENUM_MA_METHOD maMethod2, int maPeriod2, double lots, int tpPip, int slPip, int slipPip)
 : m_debugLevel(0), m_maMethod(maMethod), m_maPeriod(maPeriod), m_heikenHistoryCount(0),
   m_maMethod2(maMethod2), m_maPeriod2(maPeriod2),
   m_lots(lots), m_tpPip(tpPip), m_slPip(slPip), m_slipPip(slipPip), m_prevBars(0)
@@ -71,13 +71,13 @@ ParabolicExpert::ParabolicExpert(ENUM_MA_METHOD maMethod, int maPeriod, ENUM_MA_
     ArrayResize(m_heikenHistory, MAX_HISTORY_COUNT);
 }
 
-void ParabolicExpert::setDebugLevel(int level)
+void HeikenAshiSmoothedExpert::setDebugLevel(int level)
 {
     PrintFormat("Debug mode enabled: level=%d", level);
     m_debugLevel = level;
 }
 
-void ParabolicExpert::onTick()
+void HeikenAshiSmoothedExpert::onTick()
 {
     bool barsChanged = false;
     if (m_prevBars != Bars) {
@@ -120,12 +120,12 @@ void ParabolicExpert::onTick()
     }
 }
 
-bool ParabolicExpert::isDebug(int level)
+bool HeikenAshiSmoothedExpert::isDebug(int level)
 {
     return m_debugLevel >= level;
 }
 
-void ParabolicExpert::updateHistory()
+void HeikenAshiSmoothedExpert::updateHistory()
 {
     if (m_heikenHistoryCount > 0 ) {
         for (int i = m_heikenHistoryCount - 1; i > 0; i--) {
@@ -151,7 +151,7 @@ void ParabolicExpert::updateHistory()
     }
 }
 
-bool ParabolicExpert::isHeikenTrendChanged()
+bool HeikenAshiSmoothedExpert::isHeikenTrendChanged()
 {
     if (m_heikenHistoryCount < 2) {
         return false;
@@ -175,7 +175,7 @@ bool ParabolicExpert::isHeikenTrendChanged()
     return false;
 }
 
-HeikenTrend ParabolicExpert::getHeikenTrend(int shift)
+HeikenTrend HeikenAshiSmoothedExpert::getHeikenTrend(int shift)
 {
     if (m_heikenHistoryCount < shift) {
         return HT_UNKNOWN;
@@ -192,7 +192,7 @@ HeikenTrend ParabolicExpert::getHeikenTrend(int shift)
     }
 }
 
-bool ParabolicExpert::buy()
+bool HeikenAshiSmoothedExpert::buy()
 {
     double tp, sl;
     if (!OrderUtil::calcLimits(OP_BUY, m_tpPip, m_slPip, tp, sl)) {
@@ -208,7 +208,7 @@ bool ParabolicExpert::buy()
     return true;
 }
 
-bool ParabolicExpert::sell()
+bool HeikenAshiSmoothedExpert::sell()
 {
     double tp, sl;
     if (!OrderUtil::calcLimits(OP_SELL, m_tpPip, m_slPip, tp, sl)) {
@@ -224,7 +224,7 @@ bool ParabolicExpert::sell()
     return true;
 }
 
-bool ParabolicExpert::processTickets()
+bool HeikenAshiSmoothedExpert::processTickets()
 {
     int tickets[];
     if (!OrderUtil::getTickets(MAGIC_NUMBER, tickets)) {

@@ -1,4 +1,5 @@
-[attr]utf16 diff merge
-*.mq4 utf16 diff=mq4
-*.mqh utf16 diff=mq4
+[attr]utf16 filter=utf16 diff merge -crlf -binary
+*.mq4 utf16
+*.mqh utf16
 *.sh -crlf
+.git* -crlf

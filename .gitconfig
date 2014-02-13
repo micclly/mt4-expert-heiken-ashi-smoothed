@@ -1,0 +1,4 @@
+[filter "utf16"]
+    clean = iconv -sc -f utf-16le -t utf-8
+    smudge = iconv -sc -f utf-8 -t utf-16le
+
